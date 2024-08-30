@@ -5,21 +5,22 @@ from tkinter.filedialog import askopenfilename
 import imutils
 import pytesseract
 import matplotlib.pyplot as plt
+from pytesseract import Output
 
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"
+pytesseract.pytesseract.tesseract_cmd = r"C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
 
-# Ask the user to select the desired image and display it
+# Asking the user to select the desired image and display it
 Tk().withdraw()
 file = askopenfilename()
 image = cv2.imread(file)
 image = imutils.resize(image, width=500)
 
-# Display the original image using Matplotlib
+# Displaying the original image using Matplotlib
 plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 plt.title('Original Image')
 plt.show()
 
-# Perform image processing
+# Performing image processing
 gray_scaled = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 gray_scaled = cv2.bilateralFilter(gray_scaled, 11, 17, 17)
 edged = cv2.Canny(gray_scaled, 170, 200)
@@ -31,10 +32,9 @@ contours, hierarchy = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_AP
 image_copy = image.copy()
 cv2.drawContours(image_copy, contours, -1, (0, 255, 0), 3)
 
- # Reverse sort all the contours in terms of area and take the top 30 contours
+# Reverse sort all the contours in terms of area and take the top 30 contours
 contours = sorted(contours, key=cv2.contourArea, reverse=True)[:30]
 number_plate_contour = None
-
 for current_contour in contours:
     perimeter = cv2.arcLength(current_contour, True)
     approx = cv2.approxPolyDP(current_contour, 0.02 * perimeter, True)
@@ -55,10 +55,19 @@ gray_scaled1 = cv2.cvtColor(new_image, cv2.COLOR_BGR2GRAY)
 ret, processed_img = cv2.threshold(gray_scaled1, 125, 255, cv2.THRESH_BINARY)
 
 # Display the processed number plate using Matplotlib
-plt.imshow(processed_img, cmap='gray')
+plt.imshow(processed_img, cmap='Greys_r')
 plt.title('Number Plate Processed')
 plt.show()
 
+# newly added code for orientation change
+# rotate the image to correct the orientation (**currently working on it**)
+#rgb = cv2.cvtColor(processed_img, cv2.COLOR_BGR2GRAY)
+#results = pytesseract.image_to_osd(rgb, output_type=Output.DICT)
+#rotated = imutils.rotate_bound(processed_img, angle=results["rotate"])
+#code-End
+
 # Use tesseract to convert image into string
-text = pytesseract.image_to_string(processed_img)
+text = pytesseract.image_to_string(rotated)
+#print("Number is:", text)
+#text = pytesseract.image_to_string(processed_img, config='--psm 6')  # Adding the config parameter
 print("Number is:", text)
